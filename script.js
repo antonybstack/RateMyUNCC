@@ -12,6 +12,8 @@ numOfProfessors();
 function searchName(nameArray, professorArray) {
   let hyphenLast1;
   let hyphenLast2;
+  let combinedFirstMiddle;
+  let combinedMiddleLast;
   console.log(nameArray);
   nameArray[0] = nameArray[0].toLowerCase();
   nameArray[1] = nameArray[1].toLowerCase();
@@ -23,6 +25,7 @@ function searchName(nameArray, professorArray) {
     hyphenLast1 = nameArray[nameArray.length - 2].concat("- ", nameArray[nameArray.length - 1]);
     hyphenLast2 = nameArray[nameArray.length - 2].concat("-", nameArray[nameArray.length - 1]);
     combinedMiddleLast = nameArray[nameArray.length - 2].concat(" ", nameArray[nameArray.length - 1]);
+    combinedFirstMiddle = nameArray[0].concat(" ", nameArray[1]);
   }
 
   for (var i = 0; i < professorArray.length; i++) {
@@ -30,17 +33,26 @@ function searchName(nameArray, professorArray) {
       console.log("oops!");
     }
     if (professorArray[i].tFname.toLowerCase() === nameArray[0] && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1] && professorArray[i].tNumRatings > 0) {
+      console.log(professorArray[i]);
       return professorArray[i];
     }
     if (professorArray[i].tFname.toLowerCase() === nameArray[1] && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1] && professorArray[i].tNumRatings > 0) {
+      console.log(professorArray[i]);
       return professorArray[i];
     } else if (professorArray[i].tFname.toLowerCase() === nameArray[0] && professorArray[i].tLname.toLowerCase() === hyphenLast1) {
+      console.log(professorArray[i]);
       return professorArray[i];
     } else if (professorArray[i].tFname.toLowerCase() === nameArray[0] && professorArray[i].tLname.toLowerCase() === hyphenLast2) {
+      console.log(professorArray[i]);
       return professorArray[i];
     } else if (professorArray[i].tFname.toLowerCase() === nameArray[0] && professorArray[i].tLname.toLowerCase() === combinedMiddleLast) {
+      console.log(professorArray[i]);
+      return professorArray[i];
+    } else if (professorArray[i].tFname.toLowerCase() === combinedFirstMiddle && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1]) {
+      console.log(professorArray[i]);
       return professorArray[i];
     } else if (professorArray[i].tFname.toLowerCase() === nameArray[0].concat(" ") && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1]) {
+      console.log(professorArray[i]);
       return professorArray[i];
     }
   }
