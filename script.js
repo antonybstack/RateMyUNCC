@@ -11,7 +11,6 @@ tableRef.find("tbody tr").each(function (i) {
       // name = name.toString();
       // var splitStr = name.split();
       // console.log(name);
-      // console.log(splitStr);
       // $(this).css("text-decoration", "line-through");
       let professor = name.replace("  ", " ");
       professor = professor.split(" ");
