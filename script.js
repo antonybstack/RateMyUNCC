@@ -2,70 +2,41 @@ var profList = [];
 var numOfProf = 0;
 
 function numOfProfessors() {
-  // var numOfProf = 1;
   const url = "https://www.ratemyprofessors.com/filter/professor/?&page=1&filter=teacherlastname_sort_s+asc&query=*%3A*&queryoption=TEACHER&queryBy=schoolId&sid=1253";
-
-  chrome.runtime.sendMessage(
-    //goes to bg_page.js
-    url,
-    (data) => (numOfProf = data.searchResultsTotal)
-  );
+  //goes to bg_page.js
+  chrome.runtime.sendMessage(url, (data) => (numOfProf = data.searchResultsTotal));
 }
 
 numOfProfessors();
 
-// function searchLast(key, myArray) {
-//   for (var i = 0; i < myArray.length; i++) {
-//     if (myArray[i].tFname === key) {
-//       return myArray[i];
-//     }
-//   }
-// }
-
-// function searchFirst(key, myArray) {
-//   for (var i = 0; i < myArray.length; i++) {
-//     if (myArray[i].tLname === key) {
-//       return myArray[i];
-//     }
-//   }
-// }
-
 function searchName(nameArray, professorArray) {
-  // console.log(nameArray);
-  // console.log(profList);
   let hyphenLast = nameArray[nameArray.length - 2].concat("- ", nameArray[nameArray.length - 1]);
   let hyphenFirst = nameArray[nameArray.length - 2].concat("- ", nameArray[nameArray.length - 1]);
   for (var i = 0; i < professorArray.length; i++) {
-    if (professorArray[i].tFname.toLowerCase() === nameArray[0].toLowerCase() && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1].toLowerCase()) {
-      console.log(professorArray[i]);
+    if (
+      professorArray[i].tFname.toLowerCase() === nameArray[0].toLowerCase() &&
+      professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1].toLowerCase() &&
+      professorArray[i].tNumRatings > 0
+    ) {
       return professorArray[i];
     } else if (professorArray[i].tFname.toLowerCase() === nameArray[0].toLowerCase() && professorArray[i].tLname.toLowerCase() === hyphenLast.toLowerCase()) {
-      console.log(professorArray[i]);
-
       return professorArray[i];
-      // console.log(temp);
     } else if (professorArray[i].tFname.toLowerCase() === nameArray[0].concat(" ").toLowerCase() && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1].toLowerCase()) {
-      console.log(professorArray[i]);
-
       return professorArray[i];
-      // console.log(temp);
     }
   }
 }
 
 async function professorList() {
   let numOfPages = numOfProf / 20;
-
   let i = 1;
   while (i < numOfPages) {
+    //goes to bg_page.js
     chrome.runtime.sendMessage(
-      //goes to bg_page.js
       "https://www.ratemyprofessors.com/filter/professor/?&page=" + i + "&filter=teacherlastname_sort_s+asc&query=*%3A*&queryoption=TEACHER&queryBy=schoolId&sid=1253",
       (data) => {
         let arr = data.professors;
         arr.forEach((element) => profList.push(element));
-        // profList.push(data.professors);
-        console.log(profList);
       }
     );
     i += 1;
@@ -89,16 +60,12 @@ function run() {
           professor.pop();
         }
         if (professor[professor.length - 1].includes("-")) {
-          console.log(professor[professor.length - 1]);
           let temp = professor.pop();
           let tempArr = [];
           tempArr = temp.split("-");
-          // professor.push(tempArr);
           tempArr.forEach((element) => professor.push(element));
           professor.splice(1, 1);
         }
-        console.log(professor);
-
         let rating;
         let id;
         let professorProfile = searchName(professor, profList);
@@ -127,7 +94,6 @@ function run() {
             level = "dne";
             break;
         }
-        console.log(rating);
         if (rating !== undefined) {
           $(this)
             .find("td:nth-child(20)")
@@ -149,22 +115,29 @@ function run() {
     }
   });
 }
-setTimeout(function () {
-  run();
-}, 1500);
 
-// function searchProfessor() {}
+//checks if professor list is loaded
+function checkVariable() {
+  console.log(profList);
+  if (profList.length > 2979) {
+    console.log(profList);
+    return true;
+  } else {
+    return false;
+  }
+}
 
-// function replaceText(element) {
-//   if (element.hasChildNodes()) {
-//     element.childNodes.forEach(replaceText);
-//   } else if (element.nodeType === Text.TEXT_NODE) {
-//     if (element.textContent.match(/UNC/gi)) {
-//       const newElement = document.createElement("span");
-//       newElement.innerHTML = element.textContent.replace(/(UNC)/gi, '<span class="rainbow">$1</span>');
-//       element.replaceWith(newElement);
-//     }
-//   }
-// }
+//intervals every 50ms to check if the profile is loaded, if it is, run() executes
+var interval1 = setInterval(function () {
+  if (checkVariable() === true) {
+    run();
+  }
+}, 50);
 
-// tableRef.find("tbody tr td:nth-child(20)").after("<td class=dddefault id=rateRow>NR</td>");
+var interval2 = setInterval(function () {
+  console.log("hello");
+  if (checkVariable() === true) {
+    clearInterval(interval1);
+    clearInterval(interval2);
+  }
+}, 50);
