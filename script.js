@@ -2,12 +2,28 @@ var profList = [];
 var numOfProf = 0;
 
 function numOfProfessors() {
-  const url = "https://www.ratemyprofessors.com/filter/professor/?&page=1&filter=teacherlastname_sort_s+asc&query=*%3A*&queryoption=TEACHER&queryBy=schoolId&sid=1253";
+  const url = "https://tonysgrotto.herokuapp.com/api/professors";
   //goes to bg_page.js
-  chrome.runtime.sendMessage(url, (data) => (numOfProf = data.searchResultsTotal));
+  chrome.runtime.sendMessage(url, (data) => {
+    numOfProf = data.length;
+  });
+}
+
+function getProfessors() {
+  const url = "https://tonysgrotto.herokuapp.com/api/professors";
+  //goes to bg_page.js
+  chrome.runtime.sendMessage(url, (data) => {
+    console.log(data.length);
+    for (var i = 0; i < data.length; i++) {
+      profList.push(data[i]);
+    }
+    console.log(profList);
+  });
 }
 
 numOfProfessors();
+
+getProfessors();
 
 function searchName(nameArray, professorArray) {
   let hyphenLast1;
@@ -57,26 +73,6 @@ function searchName(nameArray, professorArray) {
     }
   }
 }
-
-async function professorList() {
-  let numOfPages = numOfProf / 20;
-  let i = 1;
-  while (i < numOfPages) {
-    //goes to bg_page.js
-    chrome.runtime.sendMessage(
-      "https://www.ratemyprofessors.com/filter/professor/?&page=" + i + "&filter=teacherlastname_sort_s+asc&query=*%3A*&queryoption=TEACHER&queryBy=schoolId&sid=1253",
-      (data) => {
-        let arr = data.professors;
-        arr.forEach((element) => profList.push(element));
-      }
-    );
-    i += 1;
-  }
-}
-
-setTimeout(function () {
-  professorList();
-}, 500);
 
 function run() {
   var tableRef = $(".datadisplaytable");
@@ -174,10 +170,16 @@ function run() {
             break;
         }
         if (rating !== undefined) {
+          let newRating;
+          if (Number.isInteger(rating)) {
+            newRating = rating + ".0";
+          } else {
+            newRating = rating.toString();
+          }
           $(this)
             .find("td:nth-child(" + placement + ")")
             .after(
-              "<td class=dddefault id=" + level + "><a class=rmpLink style='color:white !important;' href=https://www.ratemyprofessors.com/ShowRatings.jsp?tid=" + id + ">" + rating + "</a></td>"
+              "<td class=dddefault id=" + level + "><a class=rmpLink style='color:white !important;' href=https://www.ratemyprofessors.com/ShowRatings.jsp?tid=" + id + ">" + newRating + "</a></td>"
             );
         } else {
           $(this)
@@ -199,9 +201,10 @@ function run() {
 
 //checks if professor list is loaded
 function checkVariable() {
-  if (profList.length > 2979) {
+  if (profList.length == numOfProf && profList.length != 0 && numOfProf != 0) {
     return true;
   } else {
+    console.log(profList.length, numOfProf, "not yet");
     return false;
   }
 }
