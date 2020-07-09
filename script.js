@@ -142,6 +142,9 @@ function run() {
           }
         }
 
+        let firstName = professor[0];
+        let lastName = professor[professor.length - 1];
+
         let rating;
         let id;
         let professorProfile = searchName(professor, profList);
@@ -184,12 +187,20 @@ function run() {
         } else {
           $(this)
             .find("td:nth-child(" + placement + ")")
-            .after("<td class=dddefault id=" + level + ">DNE</td>");
+            .after(
+              "<td class=dddefault id=" +
+                level +
+                "><a class=rmpLink style='color:white !important;' href=https://www.ratemyprofessors.com/search.jsp?query=" +
+                firstName +
+                "+" +
+                lastName +
+                ">search</a></td>"
+            );
         }
       } else {
         $(this)
           .find("td:nth-child(" + placement + ")")
-          .after("<td class=dddefault id=" + level + ">N/A</td>");
+          .after("<td class=dddefault id=na>N/A</td>");
       }
     }
     // crosses out the classes that are closed
