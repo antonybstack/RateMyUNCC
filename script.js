@@ -1,15 +1,17 @@
-var profList = [];
-var numOfProf = 0;
-
+//fetches number of professors available to fetch from api
 function numOfProfessors() {
+  console.log(`Getting professor count ...`);
   const url = "https://tonysgrotto.herokuapp.com/api/professors";
   //goes to bg_page.js
   chrome.runtime.sendMessage(url, (data) => {
     numOfProf = data.length;
+    console.log(numOfProf + " professors total in database");
   });
 }
 
+//fetches professor data from api
 function getProfessors() {
+  console.log(`Fetching professors data ...`);
   const url = "https://tonysgrotto.herokuapp.com/api/professors";
   //goes to bg_page.js
   chrome.runtime.sendMessage(url, (data) => {
@@ -17,13 +19,8 @@ function getProfessors() {
     for (var i = 0; i < data.length; i++) {
       profList.push(data[i]);
     }
-    console.log(profList);
   });
 }
-
-numOfProfessors();
-
-getProfessors();
 
 function searchName(nameArray, professorArray) {
   let hyphenLast1;
@@ -48,11 +45,11 @@ function searchName(nameArray, professorArray) {
     if (professorArray[i].tFname === undefined || professorArray[i].tLname === undefined) {
       console.log("oops!");
     }
-    if (professorArray[i].tFname.toLowerCase() === nameArray[0] && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1] && professorArray[i].tNumRatings > 0) {
+    if (professorArray[i].tFname.toLowerCase() === nameArray[0] && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1]) {
       console.log(professorArray[i]);
       return professorArray[i];
     }
-    if (professorArray[i].tFname.toLowerCase() === nameArray[1] && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1] && professorArray[i].tNumRatings > 0) {
+    if (professorArray[i].tFname.toLowerCase() === nameArray[1] && professorArray[i].tLname.toLowerCase() === nameArray[nameArray.length - 1]) {
       console.log(professorArray[i]);
       return professorArray[i];
     } else if (professorArray[i].tFname.toLowerCase() === nameArray[0] && professorArray[i].tLname.toLowerCase() === hyphenLast1) {
@@ -74,9 +71,33 @@ function searchName(nameArray, professorArray) {
   }
 }
 
-function run() {
+function displayPlaceHolders() {
+  var gifURL = chrome.extension.getURL("spinner1.gif");
   var tableRef = $(".datadisplaytable");
-  tableRef.find("tbody tr th:nth-child(20)").after("<th class=ddheader scope=col id=rateCol>Rating</th>");
+  tableRef.find("tbody tr th:nth-child(20)").after("<th class=ddheader scope=col style='padding-right:5px !important;' id=rateCol>Rating </th>");
+  tableRef.find("tbody tr").each(function (i) {
+    var placement = 20;
+    var level = "dne";
+    if ($(this).find("td:nth-child(9)").text() === "TBA") {
+      placement = 19;
+    }
+    if (i > 1) {
+      $(this)
+        .find("td:nth-child(" + placement + ")")
+        .after("<td class='dddefault rmp' id=na><img src=" + gifURL + " width='18px'></td>");
+    }
+    //style='padding:12px !important;'
+    // crosses out the classes that are closed
+    if ($(this).find("td:nth-child(1)").text() === "C") {
+      $(this).css("text-decoration", "line-through");
+    }
+  });
+}
+displayPlaceHolders();
+
+function run() {
+  $(".dddefault.rmp").remove();
+  var tableRef = $(".datadisplaytable");
   tableRef.find("tbody tr").each(function (i) {
     var placement = 20;
     var level = "dne";
@@ -136,8 +157,8 @@ function run() {
             let tempArr = [];
             tempArr = tempFirst.split("-");
             tempArr.forEach((element) => professor.push(element));
-            professor.push(tempMiddle);
-            professor.push(tempLast);
+            professor.push(tempMiddle.replace(" ", "").trim());
+            professor.push(tempLast.trim());
             professor.splice(2, 1);
           }
         }
@@ -203,33 +224,60 @@ function run() {
           .after("<td class=dddefault id=na>N/A</td>");
       }
     }
-    // crosses out the classes that are closed
-    if ($(this).find("td:nth-child(1)").text() === "C") {
-      $(this).css("text-decoration", "line-through");
-    }
   });
 }
 
-//checks if professor list is loaded
-function checkVariable() {
+//checks if professor data was fetched from api
+function checkIfProfessorDatabaseLoaded() {
   if (profList.length == numOfProf && profList.length != 0 && numOfProf != 0) {
     return true;
   } else {
-    console.log(profList.length, numOfProf, "not yet");
+    console.log("Professor Database not loaded");
     return false;
   }
 }
 
-//intervals every 50ms to check if the profile is loaded, if it is, run() executes
+function checkIfOnCourseSection() {
+  if (document.body.contains(document.getElementsByClassName("captiontext")[0])) {
+    return true;
+  } else {
+    console.log("Not on course section page");
+    return false;
+  }
+}
+
+var profList = [];
+var numOfProf = 0;
+
+function fetchProfessorData(callback) {
+  numOfProfessors();
+  callback();
+}
+
 var interval1 = setInterval(function () {
-  if (checkVariable() === true) {
-    run();
+  if (checkIfOnCourseSection() === true) {
+    fetchProfessorData(getProfessors);
+    clearInterval(interval1);
+    var interval2 = setInterval(function () {
+      if (checkIfProfessorDatabaseLoaded() === true) {
+        run();
+
+        clearInterval(interval2);
+      }
+    }, 50);
   }
 }, 50);
 
-var interval2 = setInterval(function () {
-  if (checkVariable() === true) {
-    clearInterval(interval1);
-    clearInterval(interval2);
-  }
-}, 50);
+//intervals every 50ms to check if the professor data was fetched AND if "Section Found" element is present, run() executes
+// var interval1 = setInterval(function () {
+//   if (document.body.contains(document.getElementsByClassName("captiontext")[0])) {
+//     if (checkIfProfessorDatabaseLoaded() === true && checkIfOnCourseSection === true) {
+//       run();
+//     }
+//   }
+// }, 50);
+
+//clears check interval so it doesnt continously re run after it displays it for the first time
+// var interval3 = setInterval(function () {
+//   $(".dddefault.rmp").remove();
+// }, 50);
